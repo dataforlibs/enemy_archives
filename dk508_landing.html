@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DK508 — Mapping Ukraine's History Through a Library Catalog</title>
+<style>
+  :root {
+    --surface-1:      #0b0d10;
+    --surface-2:      #12151a;
+    --surface-3:      #171a20;
+    --card:           #14171d;
+    --text-primary:   #f2f3f5;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898791;
+    --gridline:       #2c333b;
+    --border:         rgba(255,255,255,0.10);
+    --about:          #4fa3ff;
+    --pub:            #8bd17c;
+    --russia:         #e66767;
+    --poland:         #3987e5;
+    --topics:         #d95926;
+    --other:          #199e70;
+    --ukraine:        #eda100;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; background: var(--surface-1); }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+  a { color: var(--about); }
+
+  /* ---- top bar ------------------------------------------------------- */
+  #topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+    background: rgba(11,13,16,0.92); backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--gridline);
+    padding: 10px 24px;
+  }
+  #topbar .brand { font-weight: 700; font-size: 14px; color: var(--text-primary); text-decoration: none; }
+  #topbar .brand span { color: var(--text-muted); font-weight: 400; }
+  #topbar nav { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 12.5px; }
+  #topbar nav a { color: var(--text-secondary); text-decoration: none; }
+  #topbar nav a:hover { color: var(--about); text-decoration: underline; }
+  #topbar .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; text-decoration: none; color: #9fc7ff;
+    border: 1px solid #2c3f5c; background: #131b28; border-radius: 20px;
+    padding: 5px 12px; white-space: nowrap;
+  }
+  .pill-link:hover { background: #182233; text-decoration: underline; }
+
+  /* ---- generic layout -------------------------------------------------*/
+  main { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 56px 0; border-top: 1px solid var(--gridline); }
+  section:first-of-type { border-top: none; }
+  h2 { font-size: 22px; margin: 0 0 6px 0; letter-spacing: -0.01em; }
+  h2 .kicker {
+    display: block; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--about); margin-bottom: 6px;
+  }
+  h3 { font-size: 15.5px; margin: 20px 0 6px 0; color: var(--text-primary); }
+  p { color: var(--text-secondary); font-size: 14.5px; margin: 0 0 14px 0; max-width: 760px; }
+  p.lede { font-size: 16.5px; color: var(--text-primary); }
+  .muted { color: var(--text-muted); font-size: 12.5px; }
+
+  /* ---- hero ------------------------------------------------------------*/
+  #hero { padding: 64px 0 40px 0; border-top: none; }
+  #hero h1 { font-size: 34px; line-height: 1.18; margin: 0 0 14px 0; letter-spacing: -0.02em; max-width: 760px; }
+  #hero h1 em { font-style: normal; color: var(--about); }
+  #hero p.lede { max-width: 680px; margin-bottom: 26px; }
+  .hero-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 8px; }
+  @media (max-width: 1000px) { .hero-cards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 720px) { .hero-cards { grid-template-columns: 1fr; } }
+  .tool-card {
+    display: block; text-decoration: none; border: 1px solid var(--gridline);
+    background: var(--card); border-radius: 12px; padding: 20px 20px 18px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .tool-card:hover { border-color: #3c4a5c; transform: translateY(-1px); }
+  .tool-card .icon { font-size: 22px; margin-bottom: 8px; display: block; }
+  .tool-card h3 { margin: 0 0 6px 0; font-size: 16px; color: var(--text-primary); }
+  .tool-card p { font-size: 13px; margin: 0 0 12px 0; color: var(--text-secondary); }
+  .tool-card .cta { font-size: 12.5px; color: var(--about); font-weight: 600; }
+  .tool-card.map { border-left: 3px solid var(--about); }
+  .tool-card.river { border-left: 3px solid var(--russia); }
+  .tool-card.topics { border-left: 3px solid var(--topics); }
+
+  /* ---- stat strip -------------------------------------------------------*/
+  .stat-strip {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 1px; background: var(--gridline); border: 1px solid var(--gridline);
+    border-radius: 10px; overflow: hidden; margin: 18px 0 6px 0;
+  }
+  .stat-tile { background: var(--surface-2); padding: 14px 14px 12px; }
+  .stat-tile .value { font-size: 22px; font-weight: 650; color: var(--about); font-variant-numeric: proportional-nums; }
+  .stat-tile .label { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.35; }
+
+  /* ---- chip rows --------------------------------------------------------*/
+  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 18px 0; }
+  .chip {
+    font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--gridline);
+    color: var(--text-secondary); background: var(--surface-2);
+  }
+  .chip.in-ua { border-color: #2f4a2f; color: #a9d9a9; background: #182018; }
+  .chip.outside { border-color: #4a3a2f; color: #e0b98f; background: #201a14; }
+  .chip.gone { border-color: #3a3550; color: #c3b6ea; background: #191625; }
+  .chip-legend { font-size: 11px; color: var(--text-muted); margin-top: -4px; margin-bottom: 14px; }
+  .chip-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* ---- two-col ------------------------------------------------------------*/
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 720px) { .cols2 { grid-template-columns: 1fr; } }
+  .col-card { background: var(--surface-2); border: 1px solid var(--gridline); border-radius: 10px; padding: 16px 18px; }
+  .col-card h3 { margin-top: 0; }
+  .col-card .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+
+  /* ---- callout / example box ----------------------------------------------*/
+  .example-box {
+    border: 1px solid var(--gridline); border-left: 3px solid var(--about);
+    background: var(--surface-2); border-radius: 8px; padding: 12px 16px; margin: 14px 0;
+  }
+  .example-box p { margin-bottom: 6px; font-size: 13.5px; }
+  .example-box .tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--about); font-weight: 700; }
+
+  /* ---- timeline strip -------------------------------------------------------*/
+  .tl-strip { display: flex; overflow-x: auto; gap: 0; margin: 16px 0 6px 0; padding-bottom: 8px; }
+  .tl-item { flex: none; width: 148px; padding-right: 18px; position: relative; }
+  .tl-item:not(:last-child)::after {
+    content: ''; position: absolute; top: 7px; right: 0; width: 18px; height: 1px; background: var(--gridline);
+  }
+  .tl-year { font-size: 11.5px; font-weight: 700; color: var(--ukraine); }
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ukraine); display: inline-block; margin-right: 5px; }
+  .tl-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.35; }
+
+  /* ---- honesty section list -------------------------------------------------*/
+  .caveat { display: flex; gap: 10px; margin-bottom: 14px; align-items: flex-start; }
+  .caveat .mark { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #232a1f; border: 1px solid #3a4530; color: #c9d9a8; font-size: 12px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .caveat p { margin: 0; font-size: 13.5px; }
+  .caveat b { color: var(--text-primary); }
+
+  footer {
+    border-top: 1px solid var(--gridline); padding: 30px 0 50px 0; margin-top: 10px;
+  }
+  footer p { font-size: 12.5px; color: var(--text-muted); }
+  footer .tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 18px 0; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <a class="brand" href="dk508_landing.html">DK508 <span>· Ukraine — History</span></a>
+  <nav>
+    <a href="#motivation">Why</a>
+    <a href="#data">The data</a>
+    <a href="#geography">Geography</a>
+    <a href="#network">Relationships</a>
+    <a href="#language">Language</a>
+    <a href="#timeline">Timeline</a>
+    <a href="#understanding">Why it helps</a>
+    <a href="#honesty">Methodology</a>
+  </nav>
+  <div class="tools">
+    <a class="pill-link" href="dk508_temporal_map.html">🗺️ Map &amp; network</a>
+    <a class="pill-link" href="dk508_influence_river.html">📈 Influence river</a>
+    <a class="pill-link" href="dk508_topics_river.html">📊 Subject themes</a>
+  </div>
+</div>
+
+<main>
+
+  <section id="hero">
+    <h1>What a library catalog can tell you about <em>Ukraine's</em> local history — and everyone else's part in it</h1>
+    <p class="lede">Three interactive visualizations built from the Library of Congress's DK508 classification —
+      "Ukraine — History." Not a textbook, and not a claim about who owns what: a way to see the patterns
+      already sitting inside 7,093 catalog records, and to click through to the actual books behind every
+      pattern.</p>
+
+    <div class="hero-cards">
+      <a class="tool-card map" href="dk508_temporal_map.html">
+        <span class="icon">🗺️</span>
+        <h3>Map &amp; Network Explorer</h3>
+        <p>Where the collection's subjects are, where its books were published, and how those places connect
+          to each other — with two independent, scrubbable timelines, a mini "subject themes over time"
+          streamgraph, and a click-through list of real titles behind every marker.</p>
+        <span class="cta">Open the explorer →</span>
+      </a>
+      <a class="tool-card river" href="dk508_influence_river.html">
+        <span class="icon">📈</span>
+        <h3>Influence River</h3>
+        <p>A year-by-year chart of how often the catalog's own subject headings tie Ukraine's history to
+          Russia, Poland, and other neighboring powers — next to Ukraine's own continuous historical
+          throughline, back to 650 BC.</p>
+        <span class="cta">Open the chart →</span>
+      </a>
+      <a class="tool-card topics" href="dk508_topics_river.html">
+        <span class="icon">📊</span>
+        <h3>Subject Themes River</h3>
+        <p>A streamgraph of nineteen non-geographic topics — eighteen named, solid-color themes
+          (Politics and government, Famine, Nationalism, OUN &amp; UPA, Euromaidan, People,
+          Historiography, Ethnic groups, and more) down to an "Other topics" remainder — tracking
+          when the catalog's own books ABOUT each one were published, not when the events
+          themselves happened.</p>
+        <span class="cta">Open the chart →</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="motivation">
+    <h2><span class="kicker">Why this exists</span>A library catalog is a historical instrument too</h2>
+    <p class="lede">A national library's subject-cataloguing decisions — which place a book is "about," which
+      period it covers, which places share a shelf — are themselves a kind of historical record: not of
+      events, but of how those events have been written about, cross-referenced, and collected over more
+      than a century of cataloguing.</p>
+    <p>We built this to foster deeper thinking about Ukrainian history and the relationships woven through
+      it — not to replace historians, but to make a large, ordinarily invisible dataset visible and
+      explorable. Every chart here is a starting point for a question, not a final answer: <i>why does this
+      city keep showing up as a bridge between clusters? why does this period suddenly have so much more
+      written about it? why is this book, about a small town in western Ukraine, published in Canada?</i>
+      The data rewards exactly that kind of curiosity, and every marker, band, and bubble links back to the
+      real catalog record so you can go find out.</p>
+  </section>
+
+  <section id="data">
+    <h2><span class="kicker">About the data</span>7,093 catalog records, one classification range</h2>
+    <p>DK508 is the Library of Congress classification range for the history of Ukraine. Every record here
+      comes from bulk bibliographic data for that range: a title, its subject headings (Library of Congress
+      Subject Headings, LCSH), its place and year of publication, its language, and its call number. Nothing
+      here is hand-curated content — it's what several generations of catalogers at the Library of Congress
+      recorded about each book.</p>
+    <p>Two different kinds of "where" come out of that metadata, and the two visualizations are built around
+      the difference between them:</p>
+    <ul style="color:var(--text-secondary); font-size:14.5px; padding-left:20px; margin-bottom:14px;">
+      <li style="margin-bottom:6px;"><b style="color:var(--text-primary);">Aboutness</b> — the place(s) a
+        subject heading names, often with a date range attached (e.g. <i>"Kharkiv (Ukraine) — History —
+        1941-1945"</i>). This is what a record is <i>about</i>, independent of when or where it was
+        published.</li>
+      <li><b style="color:var(--text-primary);">Publication</b> — where and when the physical book itself
+        was printed. A book published in Toronto in 1962 can be entirely about a village in Volyn in the
+        1930s.</li>
+    </ul>
+    <div class="stat-strip">
+      <div class="stat-tile"><div class="value">7,093</div><div class="label">catalog records</div></div>
+      <div class="stat-tile"><div class="value">18,300</div><div class="label">"aboutness" mentions (place + date)</div></div>
+      <div class="stat-tile"><div class="value">1,278</div><div class="label">distinct places named in subjects</div></div>
+      <div class="stat-tile"><div class="value">803</div><div class="label">distinct publication places</div></div>
+      <div class="stat-tile"><div class="value">49</div><div class="label">languages represented</div></div>
+      <div class="stat-tile"><div class="value">650 BC –<br>21st c.</div><div class="label">aboutness date span</div></div>
+    </div>
+    <p class="muted">591 of the 7,093 records (8.3%) have no place-with-date subject heading at all — usually
+      biographies or bibliographies about a person, not a place — and are browsable separately in the map
+      tool rather than silently dropped.</p>
+  </section>
+
+  <section id="geography">
+    <h2><span class="kicker">The geography isn't only Ukraine</span>Small cities, whole oblasts, and everywhere Ukraine's history touches</h2>
+    <p class="lede">The natural assumption is that a "Ukraine — History" collection is geographically about
+      Ukraine, full stop. The subject data says otherwise, and that's the most interesting thing the map
+      shows.</p>
+    <p>At the local end, the collection is genuinely granular: individual cities and towns (Lʹviv, Kharkiv,
+      Berdychiv, Uzhhorod...), and aggregate administrative regions — <i>oblasti</i> and historic regions
+      alike (Ivano-Frankivsʹka oblastʹ, Chernihivsʹka oblastʹ, Boikivshchyna, Podillia). But a meaningful
+      share of subject headings name places entirely outside Ukraine's modern borders, and for good reason:
+      a book about Russo-Ukrainian relations is <i>about</i> both Ukraine and Russia; a book about the
+      Ukrainian diaspora is about Ukraine and Canada, or Ukraine and Argentina; a book about the interwar
+      Polish administration of Galicia is about both.</p>
+
+    <div class="chip-legend">
+      <span class="dot" style="background:#3a5a3a;"></span>inside Ukraine (city, oblast, or historic region)
+      &nbsp;&nbsp;<span class="dot" style="background:#5a4530;"></span>outside Ukraine (relation, diaspora, foreign power)
+      &nbsp;&nbsp;<span class="dot" style="background:#4a4370;"></span>historical entity that no longer exists
+    </div>
+    <div class="chip-row">
+      <span class="chip in-ua">Kyiv</span>
+      <span class="chip in-ua">Lʹviv</span>
+      <span class="chip in-ua">Kharkiv</span>
+      <span class="chip in-ua">Odesa</span>
+      <span class="chip in-ua">Crimea (Ukraine)</span>
+      <span class="chip in-ua">Ivano-Frankivsʹka oblastʹ</span>
+      <span class="chip in-ua">Chernihivsʹka oblastʹ</span>
+      <span class="chip in-ua">Boikivshchyna</span>
+      <span class="chip outside">Russia / Soviet Union</span>
+      <span class="chip outside">Poland</span>
+      <span class="chip outside">Canada</span>
+      <span class="chip outside">United States</span>
+      <span class="chip outside">Germany</span>
+      <span class="chip outside">Belarus</span>
+      <span class="chip outside">Baltic States</span>
+      <span class="chip outside">Romania</span>
+      <span class="chip gone">Kyivan Rusʹ</span>
+      <span class="chip gone">Zaporozhian Sich</span>
+      <span class="chip gone">Crimean Khanate</span>
+      <span class="chip gone">Golden Horde</span>
+      <span class="chip gone">Byzantine Empire</span>
+      <span class="chip gone">Olbia (Extinct city)</span>
+      <span class="chip gone">Chersonese (Extinct city)</span>
+    </div>
+    <p>That last category matters too: not every place on the map still exists. Ancient Greek colonies on
+      the Black Sea coast, the Crimean Khanate, the Zaporozhian Sich, the Soviet Union itself — all of these
+      are subjects the catalog treats as real places with real date ranges, even though none of them appear
+      on a current political map. The map tool includes them (togglable) rather than quietly cutting the
+      collection off at whatever counts as "modern."</p>
+
+    <h3>Two maps, two different "wheres"</h3>
+    <div class="cols2">
+      <div class="col-card">
+        <h3><span class="dot" style="background:var(--about);"></span>Where it's ABOUT</h3>
+        <p>Subject-heading places, weighted by how many records and date-subdivisions mention them. Dense in
+          Ukraine, but with a long tail reaching wherever Ukrainian history has touched — diaspora
+          communities, imperial capitals, wartime fronts.</p>
+      </div>
+      <div class="col-card">
+        <h3><span class="dot" style="background:var(--pub);"></span>Where it was PUBLISHED</h3>
+        <p>Just as globally spread, for a different reason: Soviet-era publishing centers, postwar
+          Ukrainian-diaspora presses in North America and Western Europe, and modern academic publishers —
+          803 distinct places in total.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="network">
+    <h2><span class="kicker">Relationships</span>Places don't just co-occur — they form a structure</h2>
+    <p class="lede">Any two places named in the same record's subject headings are treated as connected. Do
+      that across all 7,093 records and a network falls out of the data on its own — nobody drew it by
+      hand.</p>
+    <p>Two ideas from network analysis do most of the explanatory work in that structure:</p>
+
+    <h3>Communities</h3>
+    <p>Places that co-occur with each other more than they co-occur with the rest of the network cluster
+      into <b style="color:var(--text-primary);">communities</b> — and in this data, those communities read
+      as regional patterns: western oblasts cluster together, diaspora countries cluster with the regions
+      that produced their emigrants, Crimea and the Donbas cluster with Russia-oriented material. The
+      clustering isn't imposed by us; it's a direct readout of which places this specific bibliography keeps
+      mentioning side by side.</p>
+
+    <h3>Centrality &amp; structural bridges</h3>
+    <p><b style="color:var(--text-primary);">Betweenness centrality</b> measures how often a place sits on
+      the shortest path between two other places in the network — in plain terms, how much it acts as a
+      bridge between parts of the collection that otherwise wouldn't connect. A place can have a high bridge
+      score without being especially large, if it's the one thing tying two otherwise-separate clusters
+      together.</p>
+    <div class="example-box">
+      <p class="tag">Example, from the live data</p>
+      <p>Donetsʹk oblastʹ consistently ranks as one of the network's strongest structural bridges — not
+        because it dominates any one community, but because of its dual role: a Soviet-era industrial region
+        with sister-city and diplomatic connections that reach into the Cold War-era "Soviet Union" cluster,
+        while simultaneously appearing in present-day war-coverage records that connect it to Western and
+        diaspora material. Filter the network to Russian-language records only, and the bridges shift toward
+        Crimea and the Donbas; filter to Ukrainian-language records, and they shift toward western oblasts
+        and diaspora countries like Canada. Same collection, two different skeletons — depending on which
+        language wrote about it.</p>
+    </div>
+    <p>Both of these are live in the Map &amp; Network Explorer: pin any place to see its coreness,
+      community, and betweenness rank against the rest of the network, and filter by language to watch the
+      structure reshape itself.</p>
+  </section>
+
+  <section id="language">
+    <h2><span class="kicker">Filtering by language</span>Whose words describe Ukraine's history</h2>
+    <p class="lede">49 languages appear across the collection. That range is itself a historical signal —
+      centuries of shifting rule, scholarship, and diaspora left their mark on <i>who wrote about Ukraine, in
+      what language</i>, long before it left a mark on any border.</p>
+    <div class="stat-strip">
+      <div class="stat-tile"><div class="value">4,592</div><div class="label">records in Ukrainian</div></div>
+      <div class="stat-tile"><div class="value">1,703</div><div class="label">records in Russian</div></div>
+      <div class="stat-tile"><div class="value">847</div><div class="label">records in English</div></div>
+      <div class="stat-tile"><div class="value">425</div><div class="label">records in Polish</div></div>
+      <div class="stat-tile"><div class="value">208</div><div class="label">records in German</div></div>
+    </div>
+    <p>The Russian- and Polish-language presence isn't incidental — it traces the same centuries of imperial
+      rule and cultural contact the Influence River chart plots directly: the Polish–Lithuanian Commonwealth,
+      the Russian Empire, and the Soviet Union all produced (and required) scholarship on Ukrainian territory
+      in their own languages. English's substantial share reflects the postwar Ukrainian-American and
+      Ukrainian-Canadian diaspora's academic output, as much as it reflects Anglophone scholarly interest.
+      Filtering the map by language doesn't just shrink the dataset — it changes which places and
+      relationships surface at all.</p>
+  </section>
+
+  <section id="timeline">
+    <h2><span class="kicker">History runs deeper than statehood</span>Independence was 1991 — the catalog's coverage isn't</h2>
+    <p class="lede">Ukraine has been a formally independent, internationally recognized state since 1991. The
+      catalog's own idea of "Ukrainian history" doesn't start there, or anywhere close to there — its
+      earliest documented subject matter runs back roughly 2,500 years, to Greek colonies on the Black Sea
+      coast.</p>
+    <div class="tl-strip">
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>650 BC</div><div class="tl-label">Greek Black Sea colonization begins (Olbia, Chersonesus)</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>882 AD</div><div class="tl-label">Kyivan Rusʹ founded</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1240</div><div class="tl-label">Mongol sack of Kyiv</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1569</div><div class="tl-label">Union of Lublin</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1648</div><div class="tl-label">Khmelnytsky Uprising / Pereiaslav</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1772</div><div class="tl-label">Partitions of Poland begin</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1921</div><div class="tl-label">Peace of Riga</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1939</div><div class="tl-label">WWII annexations</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>1991</div><div class="tl-label">Independence</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>2014</div><div class="tl-label">Crimea annexed / Donbas war</div></div>
+      <div class="tl-item"><div class="tl-year"><span class="tl-dot"></span>2022</div><div class="tl-label">Full-scale invasion</div></div>
+    </div>
+    <p>The Influence River chart plots exactly this: Ukraine's own subject-heading throughline against how
+      often Russia, Poland, and other neighboring powers appear in the same bibliography, year by year, from
+      650 BC to the present — with these same turning points marked directly on the chart.</p>
+  </section>
+
+  <section id="understanding">
+    <h2><span class="kicker">What this adds to historical understanding</span>Three things this view does that reading the catalog record-by-record can't</h2>
+    <p class="lede">This isn't a substitute for reading the books, and it doesn't settle historical arguments on
+      its own. What it's good for is noticing things a straightforward read of 7,093 individual records would
+      never surface, and turning them into questions worth chasing into the actual titles.</p>
+
+    <h3>Emphasis becomes visible</h3>
+    <p>A single catalog record can't tell you whether it's typical or an outlier for its period — only the
+      shape of many records together can. On the Influence River, Poland's mention-years step from the
+      mid-teens to 33 right at 1918, and Russia's step from 14 to 25 at 1917 — precisely the Ukrainian–Polish
+      War and the Russian Revolution. No reader browsing headings one at a time would notice that step; seen
+      as a shape, it's immediate. That's a claim about how this history has been catalogued and written
+      about, not a verdict on what happened — but it's real evidence of emphasis, and exactly the kind of
+      thing worth opening the actual records behind it to understand further.</p>
+
+    <h3>Documentation has its own timeline, separate from events</h3>
+    <p>The Map &amp; Network Explorer keeps two timelines deliberately separate: what a record is <i>about</i>
+      versus <i>when it was published</i>. A retrospective history written decades after the events it covers
+      looks identical to a contemporaneous account if you only track one date — conflate the two and you lose
+      the ability to ask "when did people start writing about this," which is its own historical question,
+      distinct from "when did this happen." Splitting them turns the catalog into a rough instrument for
+      watching scholarly and public attention shift over time, not just the events themselves.</p>
+
+    <h3>Silence isn't proof of absence</h3>
+    <p>The Influence River goes completely flat for Russia, Poland, and every other outside power before
+      1501, and the "Other powers" band goes quiet twice more, in 1743–1799 and 1801–1866. It would be easy to
+      read a flat line as "nothing happened here" — this view deliberately doesn't let that reading go
+      unchallenged. A gap might mean the catalog genuinely holds nothing describing that period, or it might
+      mean cataloguing practice at the time simply didn't apply this kind of dated heading as often, regardless
+      of what was actually going on historically. The tool can't tell those two apart for you, and doesn't try
+      to — surfacing the question at all is a more careful way to read an archive than assuming its coverage
+      is even. The Map Explorer's structural bridges do something similar for geography: a place like the
+      Soviet Union or Poland scoring high on betweenness is, in a rough sense, a fingerprint of exactly how
+      entangled Ukraine's administrative and documented history has been with its neighbors.</p>
+
+    <h3>Why this beats reading headings or call numbers directly</h3>
+    <p>Nothing in these tools is information a subject heading or an LCC call number doesn't already contain
+      — every mention-year, every network edge, every place on the map traces back to text a cataloger
+      actually wrote. What changes is what becomes possible to <i>see</i> at the scale of 7,093 records, not
+      one.</p>
+    <p>A call number puts a book in exactly one place. A number like <code>DK508.833 .L976</code> encodes this
+      collection's own internal topic/region hierarchy and sorts a book to one fixed shelf position within
+      it — useful for browsing physically-adjacent books, but a book only lives at that one spot. The same
+      record can be about a place, a time period, <i>and</i> a relationship to another power all at once, and
+      a shelf position can't hold three dimensions simultaneously the way a filterable map, timeline, and
+      network graph can — the map/river/network views just let the same 7,093 records get grouped by
+      whichever of those axes is the interesting one right now, instead of the one axis a call number commits
+      to permanently.</p>
+    <p>A subject heading, read one record at a time in a catalog search, is a list — and a list doesn't add.
+      Noticing that Poland's headings step from 14–15 to 33 right at 1918 means literally tallying hundreds of
+      individual date-subdivided headings by year; no one does that by eye across thousands of records, so
+      that pattern is functionally invisible to a person paging through search results, even though every
+      single heading behind it was sitting right there in the catalog the whole time. The chart isn't adding
+      information the headings lack — it's doing the arithmetic a human browsing them realistically can't,
+      and showing the result as a shape instead of a spreadsheet.</p>
+    <p>Cross-record relationships fare even worse under plain browsing: two records that share "Kharkiv" and
+      "Poland" as subjects don't visibly connect to each other anywhere in a catalog interface. You'd have to
+      search each heading separately and manually cross-reference hundreds of result lists to notice they
+      cluster — which is exactly the arithmetic the network graph performs for the whole collection at once,
+      turning an invisible pattern spread across thousands of separate search results into a handful of
+      communities and bridge nodes you can see and click through in seconds.</p>
+    <p class="muted">All of this reads the catalog's own cataloguing choices, not history directly — see
+      <a href="#honesty">Being honest about the data</a> for what that proxy can and can't support.</p>
+  </section>
+
+  <section id="explore">
+    <h2><span class="kicker">Every bubble is a bookshelf</span>Nothing here is a dead end</h2>
+    <p class="lede">Aggregate patterns are only useful if you can get back to the real evidence behind them.
+      Every part of the Map &amp; Network Explorer is click-through: pin a place to see the actual titles
+      behind it (sortable by year or alphabetically, linking out to each record's permanent page on
+      loc.gov), search by keyword across the whole collection regardless of the active filters, or hover any
+      point on the Influence River to read real example titles from that decade.</p>
+    <p>If a pattern looks surprising — a sudden plateau, an unexpected bridge, a diaspora country you didn't
+      expect — the next click is always "show me the books," not just a bigger number.</p>
+  </section>
+
+  <section id="honesty">
+    <h2><span class="kicker">Being honest about the data</span>What this is — and isn't — evidence of</h2>
+    <div class="caveat">
+      <div class="mark">1</div>
+      <p><b>"Aboutness" is documented association, not a territorial or political claim.</b> A place appearing
+        in a subject heading means a cataloger judged a book to be about that place at that time — nothing
+        about legitimacy, control, or ownership.</p>
+    </div>
+    <div class="caveat">
+      <div class="mark">2</div>
+      <p><b>Not every date comes from the subject heading itself.</b> When a heading has no date subdivision,
+        the pipeline falls back to the book's own publication year as a best guess. That fallback covers
+        roughly two-thirds of individual heading instances, but those rows are short (usually a single year),
+        so they contribute far less to any long-run pattern than the smaller share of headings with real,
+        explicit date ranges — still, it's a proxy, not a certainty, and it's the main reason to treat exact
+        year-by-year values as approximate rather than precise.</p>
+    </div>
+    <div class="caveat">
+      <div class="mark">3</div>
+      <p><b>Coverage reflects what the Library of Congress has catalogued</b>, not what was published, or what
+        happened. A gap in the chart is a gap in this collection, not necessarily a gap in history.</p>
+    </div>
+    <div class="caveat">
+      <div class="mark">4</div>
+      <p><b>591 records (8.3%) have no place-with-date subject heading at all</b> and never appear on the
+        aboutness layer — mostly biographies and bibliographies about a person rather than a place. They're
+        browsable separately in the map tool rather than silently excluded.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built from the Library of Congress's public DK508 ("Ukraine — History") bibliographic data. An
+      independent project, not affiliated with or endorsed by the Library of Congress.</p>
+    <div class="tools">
+      <a class="pill-link" href="dk508_temporal_map.html">🗺️ Open the Map &amp; Network Explorer</a>
+      <a class="pill-link" href="dk508_influence_river.html">📈 Open the Influence River chart</a>
+      <a class="pill-link" href="dk508_topics_river.html">📊 Open the Subject Themes River</a>
+    </div>
+    <p class="muted">Keep this page and all three tools saved in the same folder so the links between them resolve.</p>
+  </footer>
+
+</main>
+</body>
+</html>
